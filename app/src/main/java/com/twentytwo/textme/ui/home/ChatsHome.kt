@@ -8,7 +8,8 @@ import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.twentytwo.textme.ACTIVITIES_SEC.LoginActivity
-import com.twentytwo.textme.Model.UsersReg
+import com.twentytwo.textme.ACTIVITIES_SEC.ProfileActivity
+import com.twentytwo.textme.Model.Users
 import com.twentytwo.textme.R
 import com.twentytwo.textme.ui.CHATS.ChatActivity
 import com.twentytwo.textme.ui.CONTACTS.ADD_CONTACTS
@@ -34,22 +35,22 @@ class ChatsHome : Fragment() {
             if (firebaseUser != null) {
                 val fromUid = firebaseUser.uid
                 val rootRef = FirebaseFirestore.getInstance()
-                val uidRef = rootRef.collection("USERDETAILS").document(fromUid)
+                val uidRef = rootRef.collection("UserSegment").document(fromUid)
                 uidRef.get().addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val document = task.result
                         if (document != null) {
                             if (document.exists()) {
-                                val fromUser = document.toObject(UsersReg::class.java)
+                                val fromUser = document.toObject(Users::class.java)
                                 val userRoomsRef = rootRef.collection("rooms").document(fromUid)
                                     .collection("userRooms")
                                 userRoomsRef.get().addOnCompleteListener { t ->
                                     if (t.isSuccessful) {
                                         val listOfToUserNames = ArrayList<String>()
-                                        val listOfToUsers = ArrayList<UsersReg>()
+                                        val listOfToUsers = ArrayList<Users>()
                                         val listOfRooms = ArrayList<String>()
                                         for (d in t.result!!) {
-                                            val toUser = d.toObject(UsersReg::class.java)
+                                            val toUser = d.toObject(Users::class.java)
                                             listOfToUserNames.add(toUser.proFileImageUrl)
                                             listOfToUsers.add(toUser)
                                             listOfRooms.add(d.id)
@@ -98,7 +99,7 @@ class ChatsHome : Fragment() {
         //handle item clicks
         if (id == R.id.add_friend) {
             //do your action here, im just showing toast
-            startActivity(Intent(context, ADD_CONTACTS::class.java))
+            startActivity(Intent(context, ProfileActivity::class.java))
         }
         if (id == R.id.sign_out_button) {
             //do your action here, im just showing toast

@@ -8,11 +8,11 @@ import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
-import com.twentytwo.textme.Model.UsersReg
+import com.twentytwo.textme.Model.Users
 import com.twentytwo.textme.R
 
-class MyListAdapter(context: Context, var items: List<UsersReg>) :
-    ArrayAdapter<UsersReg>(context, R.layout.item_contacts, items) {
+class MyListAdapter(context: Context, var items: List<Users>) :
+    ArrayAdapter<Users>(context, R.layout.item_contacts, items) {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
 
@@ -23,7 +23,7 @@ class MyListAdapter(context: Context, var items: List<UsersReg>) :
         var textView1: TextView = view.findViewById(R.id.contact_names)
         var ContactsImage: ImageView = view.findViewById(R.id.ContactsImage)
 
-        var person: UsersReg = items[position]
+        var person: Users = items[position]
         textView.text = person.uid
         textView1.text = person.name
         Glide.with(context)

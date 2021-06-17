@@ -1,15 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.Profile.Profile">
-
-    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:forceDarkAllowed="true">
@@ -28,6 +22,7 @@
                     android:layout_marginTop="20dp">
 
                     <ImageView
+                        android:id="@+id/ImagePrewiew"
                         android:layout_width="120dp"
                         android:layout_height="120dp"
                         android:layout_margin="9dp"
@@ -36,6 +31,14 @@
                         android:padding="3dp"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_launcher_background" />
+                    <Button
+                        android:id="@+id/UploadProfile"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/ImagePrewiew"
+                        android:textSize="14sp"
+                        android:layout_centerHorizontal="true"
+                        android:text="Upload" />
 
                 </RelativeLayout>
 
@@ -73,6 +76,7 @@
                     android:adjustViewBounds="true"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_dashboard_black_24dp" />
+
 
             </RelativeLayout>
 
@@ -299,4 +303,3 @@
     </ScrollView>
 
 
-</FrameLayout>

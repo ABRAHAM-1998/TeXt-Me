@@ -17,6 +17,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.twentytwo.textme.Model.Message
+import com.twentytwo.textme.Model.Users
 import com.twentytwo.textme.Model.UsersReg
 import com.twentytwo.textme.R
 
@@ -32,10 +33,10 @@ class ChatActivity : AppCompatActivity() {
 
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-        val fromUser = intent.extras?.get("fromUser") as UsersReg
+        val fromUser = intent.extras?.get("fromUser") as Users
         fromUid = fromUser.uid
         var fromRooms = fromUser.rooms
-        val toUser = intent.extras!!.get("toUser") as UsersReg
+        val toUser = intent.extras!!.get("toUser") as Users
         val toUid = toUser.uid
         var toRooms = toUser.rooms
 
@@ -61,7 +62,7 @@ class ChatActivity : AppCompatActivity() {
             }
             fromRooms!![roomId] = true
             fromUser.rooms = fromRooms
-            rootRef!!.collection("USERDETAILS").document(fromUid!!)
+            rootRef!!.collection("UserSegment").document(fromUid!!)
                 .set(fromUser, SetOptions.merge())
             rootRef!!.collection("contacts").document(toUid).collection("userContacts")
                 .document(fromUid!!).set(fromUser, SetOptions.merge())
@@ -73,7 +74,7 @@ class ChatActivity : AppCompatActivity() {
             }
             toRooms!![roomId] = true
             toUser.rooms = toRooms
-            rootRef!!.collection("USERDETAILS").document(toUid).set(toUser, SetOptions.merge())
+            rootRef!!.collection("UserSegment").document(toUid).set(toUser, SetOptions.merge())
             rootRef!!.collection("contacts").document(fromUid!!).collection("userContacts")
                 .document(toUid).set(toUser, SetOptions.merge())
             rootRef!!.collection("rooms").document(fromUid!!).collection("userRooms")

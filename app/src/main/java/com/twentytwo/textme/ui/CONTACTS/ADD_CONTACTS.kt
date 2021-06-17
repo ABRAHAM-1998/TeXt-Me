@@ -16,7 +16,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.twentytwo.textme.Model.UsersReg
+import com.twentytwo.textme.Model.Users
 import com.twentytwo.textme.Model.addContacts
 import com.twentytwo.textme.R
 
@@ -25,21 +25,23 @@ class ADD_CONTACTS : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_contacts)
+
 
         auth = FirebaseAuth.getInstance()
 
         val db = Firebase.firestore
         val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-        val query = db.collection("USERDETAILS")
+        val query = db.collection("UserSegment")
             .orderBy("name")
-        val options = FirestoreRecyclerOptions.Builder<UsersReg>()
-            .setQuery(query, UsersReg::class.java)
+        val options = FirestoreRecyclerOptions.Builder<Users>()
+            .setQuery(query, Users::class.java)
             .setLifecycleOwner(this).build()
-        val adapter = object : FirestoreRecyclerAdapter<UsersReg, AddcontactViewHolder>(options) {
+        val adapter = object : FirestoreRecyclerAdapter<Users, AddcontactViewHolder>(options) {
             override fun onCreateViewHolder(
                 parent: ViewGroup,
                 viewType: Int
@@ -52,7 +54,7 @@ class ADD_CONTACTS : AppCompatActivity() {
             override fun onBindViewHolder(
                 holder: AddcontactViewHolder,
                 position: Int,
-                model: UsersReg
+                model: Users
             ) {
                 var nickName = holder.itemView.findViewById<TextView>(R.id.nickNAme)
                 var usName = holder.itemView.findViewById<TextView>(R.id.usrName)
@@ -60,9 +62,9 @@ class ADD_CONTACTS : AppCompatActivity() {
                 var addFrnfBtn = holder.itemView.findViewById<Button>(R.id.addFrnfBtn)
 
                 usName.text = model.name
-                nickName.text = model.email
+                nickName.text = model.name
                 addFrnfBtn.setOnClickListener {
-                    funAddToContact(model.uid, model.name,model.proFileImageUrl)
+                    funAddToContact(model.uid, model.name, model.proFileImageUrl)
                 }
 
             }
@@ -76,15 +78,15 @@ class ADD_CONTACTS : AppCompatActivity() {
         val db = Firebase.firestore
         val myuid = FirebaseAuth.getInstance().currentUser?.uid
 
-        var data = addContacts(proFileImageUrl,name, uid)
+        var data = addContacts(proFileImageUrl, name, uid)
         if (!uid.isEmpty()) {
             db.collection("contacts").document("$myuid")
                 .collection("userContacts").document(uid)
                 .set(data, SetOptions.merge())
                 .addOnSuccessListener {
-                    Toast.makeText(this,"SUCCESS", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "SUCCESS", Toast.LENGTH_SHORT).show()
                 }
-                .addOnFailureListener{
+                .addOnFailureListener {
                     Toast.makeText(this, "Faiilure", Toast.LENGTH_SHORT).show()
                 }
 

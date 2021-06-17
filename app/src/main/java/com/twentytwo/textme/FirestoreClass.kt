@@ -6,7 +6,7 @@ import com.twentytwo.textme.ACTIVITIES_SEC.SignupActivity
 import com.twentytwo.textme.Model.Users
 import com.twentytwo.textme.Model.UsersReg
 
-class FirestoreClass    {
+class FirestoreClass {
     private val mFireStore = FirebaseFirestore.getInstance()
 
     fun registeraUser(activity: SignupActivity, userInfo: UsersReg) {
@@ -14,7 +14,16 @@ class FirestoreClass    {
             .document(userInfo.uid)
             .set(userInfo, SetOptions.merge())
             .addOnSuccessListener {
-                activity.userRegistrationSuccess()
+                val user = Users(userInfo.uid, userInfo.proFileImageUrl, userInfo.name)
+                mFireStore.collection("UserSegment")
+                    .document(userInfo.uid)
+                    .set(user, SetOptions.merge())
+                    .addOnSuccessListener {
+                        activity.userRegistrationSuccess()
+                    }
+                    .addOnFailureListener{
+                        activity.userRegistrationFailure()
+                    }
             }
             .addOnFailureListener {
                 activity.userRegistrationFailure()

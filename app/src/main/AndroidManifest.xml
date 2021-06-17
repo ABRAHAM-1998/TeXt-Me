@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.twentytwo.textme">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -9,7 +17,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TexTMe">
-        <activity android:name=".ui.CONTACTS.ADD_CONTACTS"></activity>
+        <activity android:name=".ACTIVITIES_SEC.ProfileActivity"></activity>
+        <activity android:name=".ui.CONTACTS.ADD_CONTACTS" />
         <activity android:name=".ui.CHATS.ChatActivity" />
         <activity android:name=".ACTIVITIES_SEC.SignupActivity" />
         <activity android:name=".ACTIVITIES_SEC.LoginActivity">
@@ -18,10 +27,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity> <!-- optional (needed if default theme has no action bar) -->
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name" />
+        <activity
+            android:name="com.canhub.cropper.CropImageActivity"
+            android:theme="@style/Base.Theme.AppCompat" />
     </application>
 
 </manifest>

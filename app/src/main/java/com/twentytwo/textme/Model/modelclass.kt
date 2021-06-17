@@ -20,7 +20,6 @@ data class UsersReg(
     val date_created: String = "",
     val gender: String = "",
     val proFileImageUrl: String = "",
-    var rooms: MutableMap<String, Any>? = null
 ) : Serializable
 
 class Message(
