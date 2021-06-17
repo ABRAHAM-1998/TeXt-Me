@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:alpha="0.7"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="3dp">
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp">
+
+
+        <TextView
+            android:id="@+id/usrName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-black"
+            android:text="djflkdfj"
+            android:textAllCaps="true"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/nickNAme"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/usrName"
+            android:fontFamily="sans-serif-black"
+            android:text="Email"
+            android:textAllCaps="true"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+
+        <TextView
+            android:id="@+id/usrLastSeen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12dp"
+            android:textStyle="bold"
+            android:textColor="@color/teal_700"
+            android:layout_below="@id/nickNAme"
+            android:text="LAstseen" />
+        <TextView
+            android:id="@+id/ustLkStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12dp"
+            android:layout_toEndOf="@id/usrLastSeen"
+            android:textStyle="bold"
+            android:textColor="#F80220"
+            android:layout_below="@id/nickNAme"
+            android:layout_marginLeft="20dp"
+            android:text="LAstseen" />
+
+        <Button
+            android:id="@+id/addFrnfBtn"
+            android:layout_width="150dp"
+            android:textSize="10dp"
+            android:layout_centerVertical="true"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:text="Add to Contaxts" />
+
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>

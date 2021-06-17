@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "135149228851",
+    "project_id": "twentytwo-textme",
+    "storage_bucket": "twentytwo-textme.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:135149228851:android:feaf94dab69ca8da942446",
+        "android_client_info": {
+          "package_name": "com.twentytwo.textme"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "135149228851-lccemb5gqfvdo8u4j8o0am1a7t7taps4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.twentytwo.textme",
+            "certificate_hash": "55546453c069cacdbd34c1ac01eb64e802e041f5"
+          }
+        },
+        {
+          "client_id": "135149228851-68vkqbok2p5jfbgfatdi22hn478s27rc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6OtObV05H_5pYa41Td6kEtVkcnP1hZ58"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "135149228851-68vkqbok2p5jfbgfatdi22hn478s27rc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

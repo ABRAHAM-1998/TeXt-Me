@@ -1,0 +1,2 @@
+rootProject.name = "TexT~Me"
+include ':app'
