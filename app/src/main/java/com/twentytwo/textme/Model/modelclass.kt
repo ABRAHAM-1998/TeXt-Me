@@ -1,13 +1,16 @@
 package com.twentytwo.textme.Model
-import java.io.Serializable
+
 import com.google.firebase.firestore.ServerTimestamp
+import java.io.Serializable
 import java.util.*
+
 data class Users(
     val uid: String = "",
-    val proFileImageUrl :String="",
+    val proFileImageUrl: String = "",
     val name: String = "",
     var rooms: MutableMap<String, Any>? = null
 ) : Serializable
+
 data class UsersReg(
     val uid: String = "",
     val name: String = "",
@@ -15,8 +18,10 @@ data class UsersReg(
     val mobile: String = "",
     val password: String = "",
     val date_created: String = "",
-    val gender: String = ""
-)
+    val gender: String = "",
+    val proFileImageUrl: String = "",
+    var rooms: MutableMap<String, Any>? = null
+) : Serializable
 
 class Message(
     val messageText: String = "",
@@ -24,7 +29,9 @@ class Message(
     @ServerTimestamp
     val sentAt: Date? = null
 )
+
 data class addContacts(
-    val name: String ="",
+    val proFileImageUrl: String="",
+    val name: String = "",
     val uid: String = "",
-    )
+)

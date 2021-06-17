@@ -7,7 +7,8 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.twentytwo.textme.Model.Users
+import com.twentytwo.textme.ACTIVITIES_SEC.LoginActivity
+import com.twentytwo.textme.Model.UsersReg
 import com.twentytwo.textme.R
 import com.twentytwo.textme.ui.CHATS.ChatActivity
 import com.twentytwo.textme.ui.CONTACTS.ADD_CONTACTS
@@ -39,16 +40,16 @@ class ChatsHome : Fragment() {
                         val document = task.result
                         if (document != null) {
                             if (document.exists()) {
-                                val fromUser = document.toObject(Users::class.java)
+                                val fromUser = document.toObject(UsersReg::class.java)
                                 val userRoomsRef = rootRef.collection("rooms").document(fromUid)
                                     .collection("userRooms")
                                 userRoomsRef.get().addOnCompleteListener { t ->
                                     if (t.isSuccessful) {
                                         val listOfToUserNames = ArrayList<String>()
-                                        val listOfToUsers = ArrayList<Users>()
+                                        val listOfToUsers = ArrayList<UsersReg>()
                                         val listOfRooms = ArrayList<String>()
                                         for (d in t.result!!) {
-                                            val toUser = d.toObject(Users::class.java)
+                                            val toUser = d.toObject(UsersReg::class.java)
                                             listOfToUserNames.add(toUser.proFileImageUrl)
                                             listOfToUsers.add(toUser)
                                             listOfRooms.add(d.id)
@@ -60,12 +61,6 @@ class ChatsHome : Fragment() {
                                         list_viw.adapter = MyListAdapter(context, listOfToUsers)
                                         list_viw.onItemClickListener =
                                             AdapterView.OnItemClickListener { _, _, position, _ ->
-
-                                                Toast.makeText(
-                                                    context,
-                                                    listOfToUserNames[position],
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
                                                 val intent =
                                                     Intent(context, ChatActivity::class.java)
                                                 intent.putExtra("fromUser", fromUser)
@@ -89,23 +84,28 @@ class ChatsHome : Fragment() {
         setHasOptionsMenu(true)
         super.onCreate(savedInstanceState)
     }
+
     //inflate the menu
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater!!.inflate(R.menu.main_menu, menu)
         super.onCreateOptionsMenu(menu, inflater)
     }
+
     //handle item clicks of menu
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         //get item id to handle item clicks
         val id = item!!.itemId
         //handle item clicks
-        if (id == R.id.add_friend){
+        if (id == R.id.add_friend) {
             //do your action here, im just showing toast
-            startActivity(Intent(context,ADD_CONTACTS::class.java))
+            startActivity(Intent(context, ADD_CONTACTS::class.java))
         }
-        if (id == R.id.sign_out_button){
+        if (id == R.id.sign_out_button) {
             //do your action here, im just showing toast
             Toast.makeText(activity, "LOGOUIT", Toast.LENGTH_SHORT).show()
+            FirebaseAuth.getInstance().signOut()
+            startActivity(Intent(context, LoginActivity::class.java))
+
         }
 
         return super.onOptionsItemSelected(item)

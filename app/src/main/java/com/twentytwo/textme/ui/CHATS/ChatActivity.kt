@@ -17,7 +17,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.twentytwo.textme.Model.Message
-import com.twentytwo.textme.Model.Users
+import com.twentytwo.textme.Model.UsersReg
 import com.twentytwo.textme.R
 
 class ChatActivity : AppCompatActivity() {
@@ -32,10 +32,10 @@ class ChatActivity : AppCompatActivity() {
 
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-        val fromUser = intent.extras?.get("fromUser") as Users
+        val fromUser = intent.extras?.get("fromUser") as UsersReg
         fromUid = fromUser.uid
         var fromRooms = fromUser.rooms
-        val toUser = intent.extras!!.get("toUser") as Users
+        val toUser = intent.extras!!.get("toUser") as UsersReg
         val toUid = toUser.uid
         var toRooms = toUser.rooms
 
@@ -106,8 +106,12 @@ class ChatActivity : AppCompatActivity() {
         internal fun setMessage(message: Message) {
             val textView = view.findViewById<TextView>(R.id.text_view)
 
-            textView.text = message.messageText
+            val textTime = view.findViewById<TextView>(R.id.textTime)
 
+            textView.text = message.messageText
+            if (!message.sentAt.toString().isEmpty()) {
+                textTime.text = message.sentAt.toString().take(16)
+            }
         }
     }
 

@@ -62,7 +62,7 @@ class ADD_CONTACTS : AppCompatActivity() {
                 usName.text = model.name
                 nickName.text = model.email
                 addFrnfBtn.setOnClickListener {
-                    funAddToContact(model.uid, model.name)
+                    funAddToContact(model.uid, model.name,model.proFileImageUrl)
                 }
 
             }
@@ -72,11 +72,11 @@ class ADD_CONTACTS : AppCompatActivity() {
         addUserRecyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    private fun funAddToContact(uid: String, name: String) {
+    private fun funAddToContact(uid: String, name: String, proFileImageUrl: String) {
         val db = Firebase.firestore
         val myuid = FirebaseAuth.getInstance().currentUser?.uid
 
-        var data = addContacts(name, uid)
+        var data = addContacts(proFileImageUrl,name, uid)
         if (!uid.isEmpty()) {
             db.collection("contacts").document("$myuid")
                 .collection("userContacts").document(uid)
