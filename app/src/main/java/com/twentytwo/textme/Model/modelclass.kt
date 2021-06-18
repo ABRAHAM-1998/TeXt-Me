@@ -8,7 +8,10 @@ data class Users(
     val uid: String = "",
     val proFileImageUrl: String = "",
     val name: String = "",
-    var rooms: MutableMap<String, Any>? = null
+) : Serializable
+
+data class UsersChats(
+    val channelId:String="",val name:String=""
 ) : Serializable
 
 data class UsersReg(
@@ -22,7 +25,7 @@ data class UsersReg(
     val proFileImageUrl: String = "",
 ) : Serializable
 
-class Message(
+class Messaged(
     val messageText: String = "",
     val fromUid: String = "",
     @ServerTimestamp
@@ -30,7 +33,22 @@ class Message(
 )
 
 data class addContacts(
-    val proFileImageUrl: String="",
+    val proFileImageUrl: String = "",
     val name: String = "",
     val uid: String = "",
+)
+///////////////////////////////////////////////////////////////////////
+
+
+data class ChatChannel(val userIds: MutableList<String>) {
+    constructor() : this(mutableListOf())
+}
+
+
+data class TextMessage(
+    val text: String="",
+    val time: Date? =null,
+    val senderId: String="",
+    val recipientId: String="",
+    val senderName: String="",
 )

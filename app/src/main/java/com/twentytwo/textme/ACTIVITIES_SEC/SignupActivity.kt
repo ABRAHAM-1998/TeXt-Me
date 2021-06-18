@@ -9,8 +9,8 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.twentytwo.textme.FirestoreClass
-import com.twentytwo.textme.Model.Users
 import com.twentytwo.textme.Model.UsersReg
 import com.twentytwo.textme.R
 import java.text.SimpleDateFormat
@@ -160,11 +160,24 @@ class SignupActivity : AppCompatActivity() {
         }
     }
 
-    fun userRegistrationSuccess() {
-        FirebaseAuth.getInstance().signOut()
-        startActivity(Intent(this, LoginActivity::class.java))
-        finish()
-        Toast.makeText(this, "USER REGISTRATION SUCCESS", Toast.LENGTH_SHORT).show()
+    fun userRegistrationSuccess(name: String) {
+
+        val user = auth.currentUser
+        val profileUpdates = UserProfileChangeRequest.Builder()
+            .setDisplayName(name)
+            .build()
+
+        user!!.updateProfile(profileUpdates)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+
+                    FirebaseAuth.getInstance().signOut()
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finish()
+                    Toast.makeText(this, "USER REGISTRATION SUCCESS", Toast.LENGTH_SHORT).show()
+                }
+            }
+
     }
 
     fun userRegistrationFailure() {

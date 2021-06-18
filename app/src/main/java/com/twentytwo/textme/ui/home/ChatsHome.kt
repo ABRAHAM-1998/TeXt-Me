@@ -12,7 +12,6 @@ import com.twentytwo.textme.ACTIVITIES_SEC.ProfileActivity
 import com.twentytwo.textme.Model.Users
 import com.twentytwo.textme.R
 import com.twentytwo.textme.ui.CHATS.ChatActivity
-import com.twentytwo.textme.ui.CONTACTS.ADD_CONTACTS
 
 class ChatsHome : Fragment() {
 
@@ -36,48 +35,42 @@ class ChatsHome : Fragment() {
                 val fromUid = firebaseUser.uid
                 val rootRef = FirebaseFirestore.getInstance()
                 val uidRef = rootRef.collection("UserSegment").document(fromUid)
-                uidRef.get().addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val document = task.result
-                        if (document != null) {
-                            if (document.exists()) {
-                                val fromUser = document.toObject(Users::class.java)
-                                val userRoomsRef = rootRef.collection("rooms").document(fromUid)
-                                    .collection("userRooms")
-                                userRoomsRef.get().addOnCompleteListener { t ->
-                                    if (t.isSuccessful) {
-                                        val listOfToUserNames = ArrayList<String>()
-                                        val listOfToUsers = ArrayList<Users>()
-                                        val listOfRooms = ArrayList<String>()
-                                        for (d in t.result!!) {
-                                            val toUser = d.toObject(Users::class.java)
-                                            listOfToUserNames.add(toUser.proFileImageUrl)
-                                            listOfToUsers.add(toUser)
-                                            listOfRooms.add(d.id)
-                                        }
-//                                        val arrayAdapter = ArrayAdapter(context, R.layout.item_contacts, R.id.contact_names, listOfToUserNames
-
-
-                                        val list_viw = findViewById<ListView>(R.id.list_viw)
-                                        list_viw.adapter = MyListAdapter(context, listOfToUsers)
-                                        list_viw.onItemClickListener =
-                                            AdapterView.OnItemClickListener { _, _, position, _ ->
-                                                val intent =
-                                                    Intent(context, ChatActivity::class.java)
-                                                intent.putExtra("fromUser", fromUser)
-                                                intent.putExtra("toUser", listOfToUsers[position])
-                                                intent.putExtra("roomId", listOfRooms[position])
-                                                startActivity(intent)
-                                            }
+                    .collection("engagedChatChannels")
+                uidRef.get().addOnCompleteListener { t ->
+                    if (t.isSuccessful) {
+                        val listids = ArrayList<String>()
+                        for (d in t.result!!) {
+                            listids.add(d.id)
+                        }
+                        val uidRefernce = rootRef.collection("UserSegment")
+                            .whereIn("uid", listids)
+                        if (listids.isNotEmpty()) {
+                            uidRefernce.get().addOnCompleteListener { t ->
+                                if (t.isSuccessful) {
+                                    val listUsers = ArrayList<Users>()
+                                    for (d in t.result!!) {
+                                        val toUser = d.toObject(Users::class.java)
+                                        listUsers.add(toUser)
                                     }
+                                    var list_viw = findViewById<ListView>(R.id.list_viw)
+                                    list_viw.adapter = MyListAdapter(context, listUsers)
+                                    list_viw.onItemClickListener =
+                                        AdapterView.OnItemClickListener { _, _, position, _ ->
+                                            val intent = Intent(context, ChatActivity::class.java)
+                                            intent.putExtra("toUser", listUsers[position])
+                                            startActivity(intent)
+                                        }
+
+
                                 }
+
                             }
                         }
                     }
                 }
             }
+            return view
         }
-        return view
     }
 
     //enable options menu in this fragment

@@ -64,7 +64,7 @@ class ADD_CONTACTS : AppCompatActivity() {
                 usName.text = model.name
                 nickName.text = model.name
                 addFrnfBtn.setOnClickListener {
-                    funAddToContact(model.uid, model.name, model.proFileImageUrl)
+                    funAddToContact(model.uid)
                 }
 
             }
@@ -74,14 +74,14 @@ class ADD_CONTACTS : AppCompatActivity() {
         addUserRecyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    private fun funAddToContact(uid: String, name: String, proFileImageUrl: String) {
+    private fun funAddToContact(uid: String) {
         val db = Firebase.firestore
         val myuid = FirebaseAuth.getInstance().currentUser?.uid
 
-        var data = addContacts(proFileImageUrl, name, uid)
+        var data = addContacts( uid)
         if (!uid.isEmpty()) {
-            db.collection("contacts").document("$myuid")
-                .collection("userContacts").document(uid)
+            db.collection("UserSegment").document("$myuid")
+                .collection("contacts").document(uid)
                 .set(data, SetOptions.merge())
                 .addOnSuccessListener {
                     Toast.makeText(this, "SUCCESS", Toast.LENGTH_SHORT).show()

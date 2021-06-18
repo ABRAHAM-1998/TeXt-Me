@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
@@ -29,55 +28,42 @@ class MyContacts : Fragment() {
             if (firebaseUser != null) {
                 val fromUid = firebaseUser.uid
                 val rootRef = FirebaseFirestore.getInstance()
-                val uidRef = rootRef.collection("UserSegment").document(fromUid)
-                uidRef.get().addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val document = task.result
-                        if (document != null) {
-                            if (document.exists()) {
-                                val fromUser = document.toObject(Users::class.java)
-                                val userContactsRef =
-                                    rootRef.collection("contacts").document(fromUid)
-                                        .collection("userContacts")
-                                userContactsRef.get().addOnCompleteListener { t ->
-                                    if (t.isSuccessful) {
-                                        val listOfToUserNames = ArrayList<String>()
-                                        val listOfToUsers = ArrayList<Users>()
-                                        val listOfRooms = ArrayList<String>()
-                                        for (d in t.result!!) {
-                                            val toUser = d.toObject(Users::class.java)
-                                            listOfToUserNames.add(toUser.name)
-                                            listOfToUsers.add(toUser)
-                                            listOfRooms.add(d.id)
-                                        }
-
-                                        val arrayAdapter = ArrayAdapter(
-                                            context,
-                                            android.R.layout.simple_list_item_1,
-                                            listOfToUserNames
-                                        )
-
-                                        val list_viw = findViewById<ListView>(R.id.list_viw)
-                                        list_viw.adapter = MyListAdapter(context, listOfToUsers)
-                                        list_viw.onItemClickListener =
-                                            AdapterView.OnItemClickListener { _, _, position, _ ->
-
-                                                val intent =
-                                                    Intent(activity, ChatActivity::class.java)
-                                                intent.putExtra("fromUser", fromUser)
-                                                intent.putExtra("toUser", listOfToUsers[position])
-                                                intent.putExtra("roomId", "noRoomId")
-                                                startActivity(intent)
-                                            }
+                val uidRef =
+                    rootRef.collection("UserSegment").document(fromUid).collection("contacts")
+                uidRef.get().addOnCompleteListener { t ->
+                    if (t.isSuccessful) {
+                        val listofids = ArrayList<String>()
+                        for (d in t.result!!) {
+                            listofids.add(d.id)
+                        }
+                        if (!listofids.isEmpty()){
+                            val uidRefernce = rootRef.collection("UserSegment")
+                                .whereIn("uid", listofids)
+                            uidRefernce.get().addOnCompleteListener { t ->
+                                if (t.isSuccessful) {
+                                    val listUsers = ArrayList<Users>()
+                                    for (d in t.result!!) {
+                                        val toUser = d.toObject(Users::class.java)
+                                        listUsers.add(toUser)
                                     }
+                                    var list_viw = findViewById<ListView>(R.id.list_viw)
+                                    list_viw.adapter = MyListAdapter(context, listUsers)
+                                    list_viw.onItemClickListener =
+                                        AdapterView.OnItemClickListener { _, _, position, _ ->
+                                            val intent = Intent(context, ChatActivity::class.java)
+                                            intent.putExtra("toUser", listUsers[position])
+                                            startActivity(intent)
+                                        }
                                 }
                             }
                         }
+
                     }
                 }
             }
+
+            return view
         }
 
-        return view
     }
 }

@@ -85,7 +85,6 @@ class ProfileActivity : AppCompatActivity() {
                             //////////////////////////////////////////// >
                             val user = auth.currentUser
                             val profileUpdates = UserProfileChangeRequest.Builder()
-                                .setDisplayName(user?.displayName)
                                 .setPhotoUri(uri)
                                 .build()
 
@@ -95,10 +94,10 @@ class ProfileActivity : AppCompatActivity() {
                                         val uid = FirebaseAuth.getInstance().currentUser?.uid
                                         val db = Firebase.firestore
 
-                                        var data = uid?.let { Users(it, uri.toString()) }
-                                        val docRef = data?.let {
-                                            db.collection("UserSegment").document("$uid")
-                                                .set(it, SetOptions.merge())
+                                        var data =
+                                            Users(user.uid, uri.toString())
+                                        val docRef = db.collection("UserSegment").document("$uid")
+                                                .set(data, SetOptions.merge())
                                                 .addOnSuccessListener {
                                                     Toast.makeText(
                                                         this,
@@ -113,7 +112,7 @@ class ProfileActivity : AppCompatActivity() {
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }
-                                        }
+
 
                                     }
                                 }
