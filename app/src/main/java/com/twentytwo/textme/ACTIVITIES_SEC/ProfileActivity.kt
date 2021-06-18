@@ -10,20 +10,23 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.canhub.cropper.CropImage
-import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.twentytwo.textme.Model.Users
 import com.twentytwo.textme.R
+import com.twentytwo.textme.ui.CONTACTS.ADD_CONTACTS
+import com.twentytwo.textme.ui.Profile.UserList
 import java.util.*
 
 
@@ -32,7 +35,7 @@ class ProfileActivity : AppCompatActivity() {
     private var filePath: Uri? = null
     internal var storage: FirebaseStorage? = null
     internal var storageReference: StorageReference? = null
-    private val PICK_IMAGE_REQUEST = 1244
+    private var NameUser:String = ""
     private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +67,39 @@ class ProfileActivity : AppCompatActivity() {
 
             showFileChoser()
         }
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        val db = Firebase.firestore
+
+
+        val docRef = db.collection("USERDETAILS").document("$uid")
+        docRef.get().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                // Document found in the offline cache
+                val document = task.result
+                if (document != null) {
+                    val users = document.toObject<UserList>()
+                    val tv_name = findViewById<TextView>(R.id.tv_name)
+                    val tv_email = findViewById<TextView>(R.id.tv_email)
+                    val tv_phone = findViewById<TextView>(R.id.tv_phone)
+                    val tv_gender = findViewById<TextView>(R.id.tv_gender)
+                    tv_name.setOnClickListener {
+                        startActivity(Intent(this, ADD_CONTACTS::class.java))
+                    }
+
+                    tv_name.text = users?.name.toString()
+                    tv_email.text = users?.email.toString()
+                    tv_phone.text = users?.mobile.toString()
+                    tv_gender.text = users?.gender
+
+                    if (users != null) {
+                        NameUser =users.name
+                    }
+
+
+                }
+            }
+        }
+        ///////////////////////////
     }
 
     private fun fileUPload() {
@@ -79,47 +115,46 @@ class ProfileActivity : AppCompatActivity() {
             imageRef.putFile(filePath!!)
                 .addOnSuccessListener { taskSnapshot ->
 
-                    imageRef.getDownloadUrl().addOnSuccessListener(
-                        OnSuccessListener<Uri> { uri ->
-                            Log.d("TAG", "onSuccess: uri= $uri")
-                            //////////////////////////////////////////// >
-                            val user = auth.currentUser
-                            val profileUpdates = UserProfileChangeRequest.Builder()
-                                .setPhotoUri(uri)
-                                .build()
+                    imageRef.getDownloadUrl().addOnSuccessListener { uri ->
+                        Log.d("TAG", "onSuccess: uri= $uri")
+                        //////////////////////////////////////////// >
+                        val user = auth.currentUser
+                        val profileUpdates = UserProfileChangeRequest.Builder()
+                            .setPhotoUri(uri)
+                            .build()
 
-                            user!!.updateProfile(profileUpdates)
-                                .addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        val uid = FirebaseAuth.getInstance().currentUser?.uid
-                                        val db = Firebase.firestore
+                        user!!.updateProfile(profileUpdates)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val uid = FirebaseAuth.getInstance().currentUser?.uid
+                                    val db = Firebase.firestore
 
-                                        var data =
-                                            Users(user.uid, uri.toString())
-                                        val docRef = db.collection("UserSegment").document("$uid")
-                                                .set(data, SetOptions.merge())
-                                                .addOnSuccessListener {
-                                                    Toast.makeText(
-                                                        this,
-                                                        "SUCCESS",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
-                                                .addOnFailureListener {
-                                                    Toast.makeText(
-                                                        this,
-                                                        "Faiilure",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
+                                    var data =
+                                        Users(user.uid, uri.toString(),NameUser)
+                                    val docRef = db.collection("UserSegment").document("$uid")
+                                        .set(data, SetOptions.merge())
+                                        .addOnSuccessListener {
+                                            Toast.makeText(
+                                                this,
+                                                "SUCCESS",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                        .addOnFailureListener {
+                                            Toast.makeText(
+                                                this,
+                                                "Faiilure",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
 
 
-                                    }
                                 }
+                            }
 
 
-                            /////////////////////////////////////
-                        })
+                        /////////////////////////////////////
+                    }
 
 
                     progressDialog.dismiss()
@@ -158,12 +193,7 @@ class ProfileActivity : AppCompatActivity() {
                     filePath = result.uriContent
                 }
             }
-//            try {
-//                val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, filePath)
-//                ImagePrewiew!!.setImageBitmap(bitmap)
-//            } catch (e: IOException) {
-//                e.printStackTrace()
-//            }
+
         }
     }
 

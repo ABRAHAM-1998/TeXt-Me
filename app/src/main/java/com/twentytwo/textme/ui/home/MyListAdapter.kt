@@ -24,7 +24,7 @@ class MyListAdapter(context: Context, var items: List<Users>) :
         var ContactsImage: ImageView = view.findViewById(R.id.ContactsImage)
 
         var person: Users = items[position]
-        textView.text = person.uid
+        textView.text = person.lastseen
         textView1.text = person.name
         Glide.with(context)
             .load(person.proFileImageUrl)

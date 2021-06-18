@@ -8,10 +8,11 @@ data class Users(
     val uid: String = "",
     val proFileImageUrl: String = "",
     val name: String = "",
+    val lastseen: String = ""
 ) : Serializable
 
 data class UsersChats(
-    val channelId:String="",val name:String=""
+    val channelId: String = "", val name: String = ""
 ) : Serializable
 
 data class UsersReg(
@@ -33,8 +34,6 @@ class Messaged(
 )
 
 data class addContacts(
-    val proFileImageUrl: String = "",
-    val name: String = "",
     val uid: String = "",
 )
 ///////////////////////////////////////////////////////////////////////
@@ -45,10 +44,26 @@ data class ChatChannel(val userIds: MutableList<String>) {
 }
 
 
+//data class TextMessage(
+//    override val imagePath: String,
+//    override val text: String,
+//    override val time: Date,
+//    override val senderId: String,
+//    override val recipientId: String,
+//    override val senderName: String,
+//    override val type: String = MessageType.TEXT
+//) : Message {
+//    constructor() : this("", Date(0), "", "", "")
+//}
+
 data class TextMessage(
-    val text: String="",
-    val time: Date? =null,
-    val senderId: String="",
-    val recipientId: String="",
-    val senderName: String="",
-)
+    val imagePath: String,
+    val text: String,
+    override val time: Date,
+    override val senderId: String,
+    override val recipientId: String,
+    override val senderName: String,
+    override val type: String = MessageType.IMAGE
+) : Message {
+    constructor() : this("", "", Date(0), "", "", "", "")
+}

@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ListView
 import androidx.fragment.app.Fragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.twentytwo.textme.Model.Users
@@ -24,6 +25,11 @@ class MyContacts : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_my_contacts, container, false)
         view.apply {
+
+            val float_add_contact = findViewById< FloatingActionButton>(R.id.float_add_contact)
+            float_add_contact.setOnClickListener{
+                startActivity(Intent(context,ADD_CONTACTS::class.java))
+            }
             val firebaseUser = FirebaseAuth.getInstance().currentUser
             if (firebaseUser != null) {
                 val fromUid = firebaseUser.uid
@@ -52,6 +58,7 @@ class MyContacts : Fragment() {
                                         AdapterView.OnItemClickListener { _, _, position, _ ->
                                             val intent = Intent(context, ChatActivity::class.java)
                                             intent.putExtra("toUser", listUsers[position])
+                                            intent.putExtra("contact", "true")
                                             startActivity(intent)
                                         }
                                 }

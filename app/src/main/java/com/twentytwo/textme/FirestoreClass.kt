@@ -67,7 +67,7 @@ class FirestoreClass {
                 onComplete(newChannel.id)
             }
     }
-    fun sendMessage(message: TextMessage, channelId: String) {
+    fun sendMessage(message: Message, channelId: String) {
         chatChannelsCollectionRef.document(channelId)
             .collection("messages")
             .add(message)

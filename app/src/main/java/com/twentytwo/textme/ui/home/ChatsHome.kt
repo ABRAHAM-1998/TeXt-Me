@@ -31,6 +31,7 @@ class ChatsHome : Fragment() {
             this@ChatsHome.authStateListener?.let { firebaseAuth!!.addAuthStateListener(it) }
 
             val firebaseUser = FirebaseAuth.getInstance().currentUser
+
             if (firebaseUser != null) {
                 val fromUid = firebaseUser.uid
                 val rootRef = FirebaseFirestore.getInstance()
@@ -42,9 +43,9 @@ class ChatsHome : Fragment() {
                         for (d in t.result!!) {
                             listids.add(d.id)
                         }
-                        val uidRefernce = rootRef.collection("UserSegment")
-                            .whereIn("uid", listids)
                         if (listids.isNotEmpty()) {
+                            val uidRefernce = rootRef.collection("UserSegment")
+                                .whereIn("uid", listids)
                             uidRefernce.get().addOnCompleteListener { t ->
                                 if (t.isSuccessful) {
                                     val listUsers = ArrayList<Users>()

@@ -1,28 +1,34 @@
 package com.twentytwo.textme.ui.CHATS
 
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.ktx.Firebase
 import com.twentytwo.textme.FirestoreClass
 import com.twentytwo.textme.Model.TextMessage
 import com.twentytwo.textme.Model.Users
 import com.twentytwo.textme.R
+import com.twentytwo.textme.StorageUtil
+import java.io.ByteArrayOutputStream
 import java.util.*
+
+private const val RC_SELECT_IMAGE = 2
 
 class ChatActivity : AppCompatActivity() {
     private var rootRef: FirebaseFirestore? = null
@@ -35,6 +41,11 @@ class ChatActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
+
+        val chatshome = findViewById<LinearLayout>(R.id.chatshome)
+        chatshome.setBackgroundResource(R.drawable.wall2)
+
+
         rootRef = FirebaseFirestore.getInstance()
         fromUid = FirebaseAuth.getInstance().currentUser!!.uid
 
@@ -54,6 +65,7 @@ class ChatActivity : AppCompatActivity() {
                 val messageToSend =
                     FirebaseAuth.getInstance().currentUser?.displayName?.let { it1 ->
                         TextMessage(
+                            "",
                             edit_text.text.toString(), Calendar.getInstance().time,
                             FirebaseAuth.getInstance().currentUser!!.uid, toUid, it1
                         )
@@ -66,6 +78,16 @@ class ChatActivity : AppCompatActivity() {
             ///////////////////////////////////////////////////////////////////////////////////
         }
 //================================================================================================================================
+        val fab_send_image = findViewById<ImageView>(R.id.fab_send_image)
+        fab_send_image.setOnClickListener {
+            val intent = Intent().apply {
+                type = "image/*"
+                action = Intent.ACTION_GET_CONTENT
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/jpeg", "image/png"))
+            }
+            startActivityForResult(Intent.createChooser(intent, "Select Image"), RC_SELECT_IMAGE)
+        }
+        //==========================================================================================================
 
         val handler = Handler()
         handler.postDelayed({
@@ -93,16 +115,52 @@ class ChatActivity : AppCompatActivity() {
         }, 500)
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RC_SELECT_IMAGE && resultCode == Activity.RESULT_OK &&
+            data != null && data.data != null
+        ) {
+            val selectedImagePath = data.data
+
+            val selectedImageBmp =
+                MediaStore.Images.Media.getBitmap(contentResolver, selectedImagePath)
+
+            val outputStream = ByteArrayOutputStream()
+
+            selectedImageBmp.compress(Bitmap.CompressFormat.JPEG, 10, outputStream)
+            val selectedImageBytes = outputStream.toByteArray()
+
+            StorageUtil.uploadMessageImage(selectedImageBytes) { imagePath ->
+                val messageToSend =
+                    TextMessage(
+                        imagePath, "", Calendar.getInstance().time,
+                        FirebaseAuth.getInstance().currentUser!!.uid,
+                        toUid, "$fromUid",
+                    )
+                FirestoreClass().sendMessage(messageToSend, currentChannelId)
+            }
+        }
+    }
+
 
     inner class MessageViewHolder internal constructor(private val view: View) :
         RecyclerView.ViewHolder(view) {
         internal fun setMessage(message: TextMessage) {
-            val textView = view.findViewById<TextView>(R.id.text_view)
 
-            val textTime = view.findViewById<TextView>(R.id.textTime)
 
-            textView.text = message.text
-            if (!message.time.toString().isEmpty()) {
+
+            if (message.imagePath.isNotEmpty()) {
+                val imageView = view.findViewById<ImageView>(R.id.imageView)
+                Glide.with(this@ChatActivity)
+                    .load(message.imagePath)
+                    .into(imageView)
+            }
+            if (!message.text.toString().isEmpty()) {
+                val textView = view.findViewById<TextView>(R.id.text_view)
+                textView.text = message.text
+            }
+            if (!message.text.toString().isEmpty()) {
+                val textTime = view.findViewById<TextView>(R.id.textTime)
                 textTime.text = message.time.toString().take(16)
             }
         }
@@ -111,14 +169,24 @@ class ChatActivity : AppCompatActivity() {
     inner class MessageAdapter internal constructor(options: FirestoreRecyclerOptions<TextMessage>) :
         FirestoreRecyclerAdapter<TextMessage, MessageViewHolder>(options) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
-            return if (viewType == R.layout.item_message_to) {
+            if (viewType == R.layout.item_message_to) {
                 val view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_message_to, parent, false)
-                MessageViewHolder(view)
-            } else {
+                return MessageViewHolder(view)
+            } else if (viewType == R.layout.item_message_from) {
                 val view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_message_from, parent, false)
-                MessageViewHolder(view)
+                return MessageViewHolder(view)
+
+            } else if (viewType == R.layout.item_message_from_image) {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_message_from_image, parent, false)
+                return MessageViewHolder(view)
+
+            } else {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_message_to_image, parent, false)
+                return MessageViewHolder(view)
             }
         }
 
@@ -131,10 +199,14 @@ class ChatActivity : AppCompatActivity() {
         }
 
         override fun getItemViewType(position: Int): Int {
-            return if (fromUid != getItem(position).senderId) {
-                R.layout.item_message_to
+            if (fromUid != getItem(position).senderId && getItem(position).imagePath.isEmpty()) {
+                return R.layout.item_message_to
+            } else if (fromUid == getItem(position).senderId && getItem(position).imagePath.isEmpty()) {
+                return R.layout.item_message_from
+            } else if (fromUid == getItem(position).senderId && getItem(position).imagePath.isNotEmpty()) {
+                return R.layout.item_message_from_image
             } else {
-                R.layout.item_message_from
+                return R.layout.item_message_to_image
             }
         }
 
