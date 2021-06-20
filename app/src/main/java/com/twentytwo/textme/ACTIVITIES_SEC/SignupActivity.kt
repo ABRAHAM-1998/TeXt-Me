@@ -128,6 +128,7 @@ class SignupActivity : AppCompatActivity() {
 
 
                         val fireebaseUser: FirebaseUser = task.result?.user!!
+                        val strin = mutableListOf<String>("ghghg")
                         val userdetails = UsersReg(
                             fireebaseUser.uid,
                             sgn_name.text.toString().trim(),
@@ -136,6 +137,8 @@ class SignupActivity : AppCompatActivity() {
                             inputt_pass2.text.toString().trim(),
                             currentday.toString(),
                             gendertext,
+                            "ifuyd",
+                            strin
                         )
                         FirestoreClass().registeraUser(this@SignupActivity, userdetails)
                         //-------------------

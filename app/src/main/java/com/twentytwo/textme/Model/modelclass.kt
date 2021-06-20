@@ -8,7 +8,8 @@ data class Users(
     val uid: String = "",
     val proFileImageUrl: String = "",
     val name: String = "",
-    val lastseen: String = ""
+    val lastseen: String = "",
+    val registrationTokens: MutableList<String>? = null,
 ) : Serializable
 
 data class UsersChats(
@@ -24,11 +25,13 @@ data class UsersReg(
     val date_created: String = "",
     val gender: String = "",
     val proFileImageUrl: String = "",
-) : Serializable
+    val registrationTokens: MutableList<String>? = null,
 
-class Messaged(
-    val messageText: String = "",
-    val fromUid: String = "",
+    ) : Serializable
+
+class statustyping(
+    val typing: String = "",
+    val uid: String = "",
     @ServerTimestamp
     val sentAt: Date? = null
 )
@@ -63,7 +66,7 @@ data class TextMessage(
     override val senderId: String,
     override val recipientId: String,
     override val senderName: String,
-    override val type: String = MessageType.IMAGE
+    override val type: String = MessageType.IMAGE, override val seen: Int
 ) : Message {
-    constructor() : this("", "", Date(0), "", "", "", "")
+    constructor() : this("", "", Date(0), "", "", "", "", 0)
 }

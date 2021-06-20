@@ -35,7 +35,7 @@ class ProfileActivity : AppCompatActivity() {
     private var filePath: Uri? = null
     internal var storage: FirebaseStorage? = null
     internal var storageReference: StorageReference? = null
-    private var NameUser:String = ""
+    private var NameUser: String = ""
     private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,7 +92,7 @@ class ProfileActivity : AppCompatActivity() {
                     tv_gender.text = users?.gender
 
                     if (users != null) {
-                        NameUser =users.name
+                        NameUser = users.name
                     }
 
 
@@ -130,7 +130,13 @@ class ProfileActivity : AppCompatActivity() {
                                     val db = Firebase.firestore
 
                                     var data =
-                                        Users(user.uid, uri.toString(),NameUser)
+                                        Users(
+                                            user.uid,
+                                            uri.toString(),
+                                            NameUser,
+                                            "",
+                                            mutableListOf()
+                                        )
                                     val docRef = db.collection("UserSegment").document("$uid")
                                         .set(data, SetOptions.merge())
                                         .addOnSuccessListener {

@@ -10,6 +10,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.twentytwo.textme.ACTIVITIES_SEC.LoginActivity
 import com.twentytwo.textme.ACTIVITIES_SEC.ProfileActivity
 import com.twentytwo.textme.Model.Users
+import com.twentytwo.textme.Model.UsersChats
 import com.twentytwo.textme.R
 import com.twentytwo.textme.ui.CHATS.ChatActivity
 
@@ -40,8 +41,13 @@ class ChatsHome : Fragment() {
                 uidRef.get().addOnCompleteListener { t ->
                     if (t.isSuccessful) {
                         val listids = ArrayList<String>()
+                        val ChannelIds = ArrayList<String>()
+
                         for (d in t.result!!) {
                             listids.add(d.id)
+                            var userQ = d.toObject(UsersChats::class.java)
+                            ChannelIds.add(userQ.channelId)
+
                         }
                         if (listids.isNotEmpty()) {
                             val uidRefernce = rootRef.collection("UserSegment")
@@ -59,6 +65,9 @@ class ChatsHome : Fragment() {
                                         AdapterView.OnItemClickListener { _, _, position, _ ->
                                             val intent = Intent(context, ChatActivity::class.java)
                                             intent.putExtra("toUser", listUsers[position])
+                                            intent.putExtra("ChannelIds", ChannelIds[position])
+
+
                                             startActivity(intent)
                                         }
 

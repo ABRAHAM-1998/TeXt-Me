@@ -6,6 +6,9 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -23,9 +26,11 @@ import com.google.firebase.firestore.Query
 import com.twentytwo.textme.FirestoreClass
 import com.twentytwo.textme.Model.TextMessage
 import com.twentytwo.textme.Model.Users
+import com.twentytwo.textme.Model.statustyping
 import com.twentytwo.textme.R
 import com.twentytwo.textme.StorageUtil
 import java.io.ByteArrayOutputStream
+import java.text.SimpleDateFormat
 import java.util.*
 
 private const val RC_SELECT_IMAGE = 2
@@ -34,8 +39,11 @@ class ChatActivity : AppCompatActivity() {
     private var rootRef: FirebaseFirestore? = null
     private var fromUid: String? = ""
     private var adapter: MessageAdapter? = null
+    private var statusText: String? = ""
 
     private lateinit var currentChannelId: String
+    private lateinit var intentchannelId: String
+
     private lateinit var toUid: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,20 +62,86 @@ class ChatActivity : AppCompatActivity() {
 
         val toUser = intent.extras!!.get("toUser") as Users
         toUid = toUser.uid
+        title = toUser.name
+        intentchannelId = intent.extras!!.get("ChannelIds") as String
+
+        FirestoreClass().getStatus(toUid, intentchannelId) {
+            statusText = it
+            supportActionBar!!.subtitle = it
+
+
+        }
+
 
 //================================================================================================================
         FirestoreClass().getOrCreateChatChannel(toUid) { channelId ->
             currentChannelId = channelId
+            val handler = Handler()
+            handler.postDelayed({
+                val status =
+                    statustyping(
+                        "${Calendar.getInstance().time}",
+                        fromUid!!,
+                        Calendar.getInstance().time
+                    )
+                FirestoreClass().addTyping(status, channelId)
+            }, 20000)
+
+
             //////////////////////////////////////////////////////////////////////////////////////////
             var button = findViewById<Button>(R.id.button)
+            val edit_text = findViewById<EditText>(R.id.edit_text)
+
+            edit_text.addTextChangedListener(object : TextWatcher {
+
+                override fun afterTextChanged(s: Editable) {
+                    val date = Calendar.getInstance().time
+                    val sdf = SimpleDateFormat("HH:mm: a")
+                    val formatedDate = sdf.format(date)
+                    Toast.makeText(this@ChatActivity, "$formatedDate", Toast.LENGTH_SHORT).show()
+
+
+                    val handler = Handler()
+                    handler.postDelayed({
+                        val status =
+                            statustyping(formatedDate, fromUid!!, Calendar.getInstance().time)
+                        FirestoreClass().addTyping(status, channelId)
+                    }, 500)
+                }
+
+                override fun beforeTextChanged(
+                    s: CharSequence, start: Int,
+                    count: Int, after: Int
+                ) {
+
+                }
+
+                override fun onTextChanged(
+                    s: CharSequence, start: Int,
+                    before: Int, count: Int
+                ) {
+                    val status =
+                        statustyping("typing..", fromUid!!, Calendar.getInstance().time)
+                    FirestoreClass().addTyping(status, channelId)
+                }
+            })
+
+
+            //================================
             button.setOnClickListener {
                 val edit_text = findViewById<EditText>(R.id.edit_text)
+
                 val messageToSend =
                     FirebaseAuth.getInstance().currentUser?.displayName?.let { it1 ->
                         TextMessage(
                             "",
-                            edit_text.text.toString(), Calendar.getInstance().time,
-                            FirebaseAuth.getInstance().currentUser!!.uid, toUid, it1
+                            edit_text.text.toString(),
+                            Calendar.getInstance().time,
+                            fromUid!!,
+                            toUid,
+                            "",
+                            "",
+                            0
                         )
                     }
                 edit_text.text.clear()
@@ -91,7 +165,6 @@ class ChatActivity : AppCompatActivity() {
 
         val handler = Handler()
         handler.postDelayed({
-
             if (!currentChannelId.isEmpty()) {
                 // do something after 1000ms
                 val query =
@@ -110,7 +183,6 @@ class ChatActivity : AppCompatActivity() {
 
                 recycler_view.layoutManager = LinearLayoutManager(this@ChatActivity)
 
-                title = toUser.name
             }
         }, 500)
     }
@@ -132,11 +204,18 @@ class ChatActivity : AppCompatActivity() {
 
             StorageUtil.uploadMessageImage(selectedImageBytes) { imagePath ->
                 val messageToSend =
-                    TextMessage(
-                        imagePath, "", Calendar.getInstance().time,
-                        FirebaseAuth.getInstance().currentUser!!.uid,
-                        toUid, "$fromUid",
-                    )
+                    fromUid?.let {
+                        TextMessage(
+                            imagePath,
+                            "",
+                            Calendar.getInstance().time,
+                            it,
+                            toUid,
+                            "fgfd",
+                            "",
+                            0
+                        )
+                    }
                 FirestoreClass().sendMessage(messageToSend, currentChannelId)
             }
         }
@@ -146,7 +225,6 @@ class ChatActivity : AppCompatActivity() {
     inner class MessageViewHolder internal constructor(private val view: View) :
         RecyclerView.ViewHolder(view) {
         internal fun setMessage(message: TextMessage) {
-
 
 
             if (message.imagePath.isNotEmpty()) {
@@ -159,9 +237,20 @@ class ChatActivity : AppCompatActivity() {
                 val textView = view.findViewById<TextView>(R.id.text_view)
                 textView.text = message.text
             }
-            if (!message.text.toString().isEmpty()) {
+            if (message.seen == 1 && message.senderId == fromUid) {
+                val tickread = view.findViewById<ImageView>(R.id.tickread)
+                tickread.visibility = View.VISIBLE
                 val textTime = view.findViewById<TextView>(R.id.textTime)
-                textTime.text = message.time.toString().take(16)
+                val sdf = SimpleDateFormat("dd-MMM hh:mm a")
+                val formatedDate = sdf.format(message.time)
+                textTime.text = formatedDate
+
+            } else {
+                val textTime = view.findViewById<TextView>(R.id.textTime)
+                val sdf = SimpleDateFormat("dd-MMM hh:mm a")
+                val formatedDate = sdf.format(message.time)
+                textTime.text = formatedDate
+
             }
         }
     }
@@ -214,6 +303,27 @@ class ChatActivity : AppCompatActivity() {
             val recycler_view = findViewById<RecyclerView>(R.id.recycler_view)
 
             recycler_view.layoutManager?.scrollToPosition(itemCount - 1)
+            Log.d("TAG", "onDataChanged:")
+            val messageCoolect = rootRef?.collection("chatChannels")?.document(currentChannelId)
+                ?.collection("messages")
+
+
+            if (messageCoolect != null) {
+                messageCoolect
+                    .whereEqualTo("recipientId", fromUid).get().addOnCompleteListener { t ->
+                        if (t.isSuccessful) {
+
+                            Log.d("TAG", "onDataChanged: sucessd")
+                            for (d in t.result!!) {
+                                messageCoolect.document(d.id).update("seen", 1)
+                                Log.d("TAG", "onDataChanged: true")
+
+                            }
+                        }
+                    }
+
+
+            }
         }
     }
 
