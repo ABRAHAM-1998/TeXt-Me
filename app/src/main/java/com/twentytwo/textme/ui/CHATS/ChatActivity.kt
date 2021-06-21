@@ -1,25 +1,30 @@
 package com.twentytwo.textme.ui.CHATS
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -36,10 +41,13 @@ import java.util.*
 private const val RC_SELECT_IMAGE = 2
 
 class ChatActivity : AppCompatActivity() {
+    //=========================================
+
+
+    //===========================================//
     private var rootRef: FirebaseFirestore? = null
     private var fromUid: String? = ""
     private var adapter: MessageAdapter? = null
-    private var statusText: String? = ""
 
     private lateinit var currentChannelId: String
     private lateinit var intentchannelId: String
@@ -49,6 +57,7 @@ class ChatActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
+        //==============================================================
 
         val chatshome = findViewById<LinearLayout>(R.id.chatshome)
         chatshome.setBackgroundResource(R.drawable.wall2)
@@ -65,27 +74,15 @@ class ChatActivity : AppCompatActivity() {
         title = toUser.name
         intentchannelId = intent.extras!!.get("ChannelIds") as String
 
-        FirestoreClass().getStatus(toUid, intentchannelId) {
-            statusText = it
-            supportActionBar!!.subtitle = it
 
-
-        }
+//        FirestoreClass().getStatus(toUid, intentchannelId) {
+//            supportActionBar!!.subtitle = it
+//        }
 
 
 //================================================================================================================
         FirestoreClass().getOrCreateChatChannel(toUid) { channelId ->
             currentChannelId = channelId
-            val handler = Handler()
-            handler.postDelayed({
-                val status =
-                    statustyping(
-                        "${Calendar.getInstance().time}",
-                        fromUid!!,
-                        Calendar.getInstance().time
-                    )
-                FirestoreClass().addTyping(status, channelId)
-            }, 20000)
 
 
             //////////////////////////////////////////////////////////////////////////////////////////
@@ -98,9 +95,6 @@ class ChatActivity : AppCompatActivity() {
                     val date = Calendar.getInstance().time
                     val sdf = SimpleDateFormat("HH:mm: a")
                     val formatedDate = sdf.format(date)
-                    Toast.makeText(this@ChatActivity, "$formatedDate", Toast.LENGTH_SHORT).show()
-
-
                     val handler = Handler()
                     handler.postDelayed({
                         val status =
@@ -129,10 +123,9 @@ class ChatActivity : AppCompatActivity() {
 
             //================================
             button.setOnClickListener {
-                val edit_text = findViewById<EditText>(R.id.edit_text)
 
                 val messageToSend =
-                    FirebaseAuth.getInstance().currentUser?.displayName?.let { it1 ->
+                    FirebaseAuth.getInstance().currentUser?.displayName?.let {
                         TextMessage(
                             "",
                             edit_text.text.toString(),
@@ -183,9 +176,46 @@ class ChatActivity : AppCompatActivity() {
 
                 recycler_view.layoutManager = LinearLayoutManager(this@ChatActivity)
 
+                val itemTouchHelperCallback =
+                    object :
+                        ItemTouchHelper.SimpleCallback(
+                            0,
+                            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                        ) {
+                        override fun onMove(
+                            recyclerView: RecyclerView,
+                            viewHolder: RecyclerView.ViewHolder,
+                            target: RecyclerView.ViewHolder
+                        ) = false
+
+                        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                            val position = viewHolder.adapterPosition
+                            Snackbar.make(
+                                chatshome, // The ID of your coordinator_layout
+                                getString(R.string.messagedelete),
+                                Snackbar.LENGTH_LONG
+                            ).apply {
+                                setAction("Deleted") {
+                                    // If you're not using LiveData you might need to tell the adapter
+                                    // that an item was inserted: notifyItemInserted(position);
+                                    recycler_view.scrollToPosition(position)
+                                }
+                                setActionTextColor(Color.RED)
+                            }.show()
+
+
+                        }
+                    }
+                ItemTouchHelper(itemTouchHelperCallback).apply {
+                    attachToRecyclerView(recycler_view)
+                }
             }
         }, 500)
     }
+
+    //=========================================================================================RUNNERRRR============
+
+    //===================================================================================================
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -206,14 +236,7 @@ class ChatActivity : AppCompatActivity() {
                 val messageToSend =
                     fromUid?.let {
                         TextMessage(
-                            imagePath,
-                            "",
-                            Calendar.getInstance().time,
-                            it,
-                            toUid,
-                            "fgfd",
-                            "",
-                            0
+                            imagePath, "", Calendar.getInstance().time, it, toUid, "fgfd", "", 0
                         )
                     }
                 FirestoreClass().sendMessage(messageToSend, currentChannelId)
@@ -223,9 +246,15 @@ class ChatActivity : AppCompatActivity() {
 
 
     inner class MessageViewHolder internal constructor(private val view: View) :
+
         RecyclerView.ViewHolder(view) {
         internal fun setMessage(message: TextMessage) {
-
+            val textView = view.findViewById<TextView>(R.id.text_view)
+            if (message.senderId == fromUid) {
+                textView.setOnClickListener {
+                    Toast.makeText(this@ChatActivity, "$position", Toast.LENGTH_SHORT).show()
+                }
+            }
 
             if (message.imagePath.isNotEmpty()) {
                 val imageView = view.findViewById<ImageView>(R.id.imageView)
@@ -245,6 +274,13 @@ class ChatActivity : AppCompatActivity() {
                 val formatedDate = sdf.format(message.time)
                 textTime.text = formatedDate
 
+            } else if (message.seen == 0 && message.senderId == fromUid) {
+                val tickread = view.findViewById<ImageView>(R.id.tickread)
+                tickread.visibility = View.INVISIBLE
+                val textTime = view.findViewById<TextView>(R.id.textTime)
+                val sdf = SimpleDateFormat("dd-MMM hh:mm a")
+                val formatedDate = sdf.format(message.time)
+                textTime.text = formatedDate
             } else {
                 val textTime = view.findViewById<TextView>(R.id.textTime)
                 val sdf = SimpleDateFormat("dd-MMM hh:mm a")
@@ -286,6 +322,7 @@ class ChatActivity : AppCompatActivity() {
         ) {
             holder.setMessage(model)
         }
+///////////////////////////////////////////////////////////////////////////////////////////////
 
         override fun getItemViewType(position: Int): Int {
             if (fromUid != getItem(position).senderId && getItem(position).imagePath.isEmpty()) {
@@ -297,13 +334,14 @@ class ChatActivity : AppCompatActivity() {
             } else {
                 return R.layout.item_message_to_image
             }
+
         }
 
         override fun onDataChanged() {
             val recycler_view = findViewById<RecyclerView>(R.id.recycler_view)
 
+
             recycler_view.layoutManager?.scrollToPosition(itemCount - 1)
-            Log.d("TAG", "onDataChanged:")
             val messageCoolect = rootRef?.collection("chatChannels")?.document(currentChannelId)
                 ?.collection("messages")
 
@@ -313,10 +351,8 @@ class ChatActivity : AppCompatActivity() {
                     .whereEqualTo("recipientId", fromUid).get().addOnCompleteListener { t ->
                         if (t.isSuccessful) {
 
-                            Log.d("TAG", "onDataChanged: sucessd")
                             for (d in t.result!!) {
                                 messageCoolect.document(d.id).update("seen", 1)
-                                Log.d("TAG", "onDataChanged: true")
 
                             }
                         }
@@ -326,6 +362,7 @@ class ChatActivity : AppCompatActivity() {
             }
         }
     }
+
 
     override fun onOptionsItemSelected(menuItem: MenuItem): Boolean {
         return when (menuItem.itemId) {

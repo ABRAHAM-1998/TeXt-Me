@@ -26,9 +26,9 @@ class MyContacts : Fragment() {
         val view = inflater.inflate(R.layout.fragment_my_contacts, container, false)
         view.apply {
 
-            val float_add_contact = findViewById< FloatingActionButton>(R.id.float_add_contact)
-            float_add_contact.setOnClickListener{
-                startActivity(Intent(context,ADD_CONTACTS::class.java))
+            val float_add_contact = findViewById<FloatingActionButton>(R.id.float_add_contact)
+            float_add_contact.setOnClickListener {
+                startActivity(Intent(context, ADD_CONTACTS::class.java))
             }
             val firebaseUser = FirebaseAuth.getInstance().currentUser
             if (firebaseUser != null) {
@@ -42,7 +42,7 @@ class MyContacts : Fragment() {
                         for (d in t.result!!) {
                             listofids.add(d.id)
                         }
-                        if (!listofids.isEmpty()){
+                        if (!listofids.isEmpty()) {
                             val uidRefernce = rootRef.collection("UserSegment")
                                 .whereIn("uid", listofids)
                             uidRefernce.get().addOnCompleteListener { t ->
@@ -59,6 +59,8 @@ class MyContacts : Fragment() {
                                             val intent = Intent(context, ChatActivity::class.java)
                                             intent.putExtra("toUser", listUsers[position])
                                             intent.putExtra("contact", "true")
+                                            intent.putExtra("ChannelIds", "")
+
                                             startActivity(intent)
                                         }
                                 }

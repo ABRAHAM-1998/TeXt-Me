@@ -70,3 +70,13 @@ data class TextMessage(
 ) : Message {
     constructor() : this("", "", Date(0), "", "", "", "", 0)
 }
+
+data class Feeds(
+    val uid:String="",
+    val imagePath: String="",
+    val location:String="",
+    val title:String="",
+    val descreption: String="",
+    val uploadedTiem:Date?=null,
+    val profileUrl: String=""
+)

@@ -103,8 +103,6 @@ class FirestoreClass {
                 if (t.isSuccessful) {
                     for (d in t.result!!) {
                         messageCoolect.document(d.id).set(mapOf("read" to "true"))
-                        Log.d("TAG", "seen: success")
-
                     }
                 }
             }
@@ -137,47 +135,85 @@ class FirestoreClass {
             .document(uid)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    Log.w("TAG", "Listen failed.", e)
                     return@addSnapshotListener
                 }
 
                 if (snapshot != null && snapshot.exists()) {
-                    Log.d("TAG", "Current data: ${snapshot.data?.get("typing")}")
 
-                    val cities = ArrayList<Date>()
+                    //==========================================
+                    val dataSet = statustyping("",currentChannelId,Calendar.getInstance().time)
+                    chatChannelsCollectionRef.document(currentChannelId).collection("status")
+                        .document(currentUserId)
+                        .set(dataSet)
+
+                    //======================================================================
+
+
+
+                    var data = snapshot.getString("typing") as String
                     snapshot.getDate("sentAt")?.let {
                         //==========================================
-                        Log.d("TAGS", "getStatus: $it")
                         val date1 = it
                         val sdf1 = SimpleDateFormat("HH:mm a")
                         val formatedDate1 = sdf1.format(date1)
                         var hS = formatedDate1.substring(0, 2).toInt()
                         val mS = formatedDate1.substring(3, 5).toInt()
 
+
                         //=============================================
                         val date = Calendar.getInstance().time
+
                         val sdf = SimpleDateFormat("HH:mm a")
                         val formatedDate = sdf.format(date)
                         var hN = formatedDate.substring(0, 2).toInt()
                         val mN = formatedDate.substring(3, 5).toIntOrNull() ?: 0
 
-                        if (hN >= hS && mN >= mS) {
-                            if (hN - hS <=1 && mN-mS <= 1) {
 
-                                onComplete("ths uasd")
+                        val sdf2 = SimpleDateFormat("MMM dd HH:mm a")
+                        val displayDate = sdf2.format(date1)
+                        val curebt = sdf2.format(date)
+                        val day2day = displayDate.substring(4, 6).toInt()
+
+                        val today = curebt.substring(4, 6).toInt()
+
+                        if (data == "typing..") {
+                            onComplete(data)
+                        } else
+                            if (day2day == today) {
+
+                                if (hN >= hS && mN >= mS) {
+                                    if (hN - hS <= 0 &&  (mN - mS) == 0) {
+
+                                        onComplete("online")
+                                    } else {
+                                        onComplete(displayDate)
+                                    }
+                                } else if (hN - hS == -23 && mN >= mS) {
+                                    if ((mN - mS) == 0) {
+
+                                        onComplete("online")
+                                    }
+                                }
+                                if ((hN - hS) == 0) {
+                                    if ( (mN - mS) == 0) {
+                                        onComplete("online")
+                                    } else {
+                                        onComplete(displayDate)
+
+                                    }
+                                }
+                            } else {
+                                onComplete(displayDate)
                             }
-                        }
-//                        onComplete(snapshot.data?.get("typing") as String)
+
 
                         //=========================================
-//                        Log.d("TAG", "Current data: $hN:$mN$mN2  adn $hS:$mS$mS2")
 
 
                     }
 
 
                 } else {
-                    Log.d("TAG", "Current data: null")
                 }
 
             }
