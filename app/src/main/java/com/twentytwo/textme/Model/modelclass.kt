@@ -66,7 +66,7 @@ data class TextMessage(
     override val senderId: String,
     override val recipientId: String,
     override val senderName: String,
-    override val type: String = MessageType.IMAGE, override val seen: Int
+    override val type: String = "", override val seen: Int
 ) : Message {
     constructor() : this("", "", Date(0), "", "", "", "", 0)
 }

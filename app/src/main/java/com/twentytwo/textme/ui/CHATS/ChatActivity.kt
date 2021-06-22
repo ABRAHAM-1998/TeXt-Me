@@ -1,21 +1,15 @@
 package com.twentytwo.textme.ui.CHATS
 
 import android.app.Activity
-import android.app.AlertDialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -26,14 +20,23 @@ import com.firebase.ui.firestore.FirestoreRecyclerAdapter
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
+import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.twentytwo.textme.FirestoreClass
 import com.twentytwo.textme.Model.TextMessage
 import com.twentytwo.textme.Model.Users
+import com.twentytwo.textme.Model.UsersChats
 import com.twentytwo.textme.Model.statustyping
 import com.twentytwo.textme.R
 import com.twentytwo.textme.StorageUtil
+import com.twentytwo.textme.webrtccall.Constants
+import com.twentytwo.textme.webrtccall.RTCActivity
+import io.ktor.util.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,8 +44,8 @@ import java.util.*
 private const val RC_SELECT_IMAGE = 2
 
 class ChatActivity : AppCompatActivity() {
-    //=========================================
-
+    //=========================================//REAL TIME DATABASE INGITTO
+    private lateinit var mDatabase: DatabaseReference
 
     //===========================================//
     private var rootRef: FirebaseFirestore? = null
@@ -59,6 +62,9 @@ class ChatActivity : AppCompatActivity() {
         setContentView(R.layout.activity_chat)
         //==============================================================
 
+
+//
+//==========================================================================
         val chatshome = findViewById<LinearLayout>(R.id.chatshome)
         chatshome.setBackgroundResource(R.drawable.wall2)
 
@@ -74,6 +80,9 @@ class ChatActivity : AppCompatActivity() {
         title = toUser.name
         intentchannelId = intent.extras!!.get("ChannelIds") as String
 
+        //=================================================
+
+        //=================================================
 
 //        FirestoreClass().getStatus(toUid, intentchannelId) {
 //            supportActionBar!!.subtitle = it
@@ -85,6 +94,8 @@ class ChatActivity : AppCompatActivity() {
             currentChannelId = channelId
 
 
+
+
             //////////////////////////////////////////////////////////////////////////////////////////
             var button = findViewById<Button>(R.id.button)
             val edit_text = findViewById<EditText>(R.id.edit_text)
@@ -92,15 +103,7 @@ class ChatActivity : AppCompatActivity() {
             edit_text.addTextChangedListener(object : TextWatcher {
 
                 override fun afterTextChanged(s: Editable) {
-                    val date = Calendar.getInstance().time
-                    val sdf = SimpleDateFormat("HH:mm: a")
-                    val formatedDate = sdf.format(date)
-                    val handler = Handler()
-                    handler.postDelayed({
-                        val status =
-                            statustyping(formatedDate, fromUid!!, Calendar.getInstance().time)
-                        FirestoreClass().addTyping(status, channelId)
-                    }, 500)
+//============================================================
                 }
 
                 override fun beforeTextChanged(
@@ -114,10 +117,9 @@ class ChatActivity : AppCompatActivity() {
                     s: CharSequence, start: Int,
                     before: Int, count: Int
                 ) {
-                    val status =
-                        statustyping("typing..", fromUid!!, Calendar.getInstance().time)
-                    FirestoreClass().addTyping(status, channelId)
+                    //=============================
                 }
+
             })
 
 
@@ -248,12 +250,13 @@ class ChatActivity : AppCompatActivity() {
     inner class MessageViewHolder internal constructor(private val view: View) :
 
         RecyclerView.ViewHolder(view) {
+        @KtorExperimentalAPI
         internal fun setMessage(message: TextMessage) {
-            val textView = view.findViewById<TextView>(R.id.text_view)
-            if (message.senderId == fromUid) {
-                textView.setOnClickListener {
-                    Toast.makeText(this@ChatActivity, "$position", Toast.LENGTH_SHORT).show()
-                }
+            if (!message.text.isEmpty() && message.senderId != fromUid) {
+                val textView = view.findViewById<TextView>(R.id.text_view)
+                textView.text = message.text
+                val message_root = view.findViewById<RelativeLayout>(R.id.message_root)
+                message_root.setBackgroundResource(R.drawable.message_to)
             }
 
             if (message.imagePath.isNotEmpty()) {
@@ -262,9 +265,28 @@ class ChatActivity : AppCompatActivity() {
                     .load(message.imagePath)
                     .into(imageView)
             }
-            if (!message.text.toString().isEmpty()) {
+            if (!message.text.isEmpty() && message.type == "video" && message.senderId == toUid) {
+                val textView = view.findViewById<TextView>(R.id.text_view)
+                val message_root = view.findViewById<RelativeLayout>(R.id.message_root)
+                textView.text = "INCOMMING CALL ACCEPT"
+                message_root.setBackgroundResource(R.drawable.message_to_call)
+                textView.setOnClickListener {
+                    joinVideoCall(message.senderName)
+                }
+            } else if (!message.text.isEmpty() && message.type == "video" && message.senderId == fromUid) {
+                val textView = view.findViewById<TextView>(R.id.text_view)
+                textView.text = "Outgoing Video Call"
+                textView.setTextColor(Color.CYAN)
+
+            } else if (!message.text.isEmpty()) {
                 val textView = view.findViewById<TextView>(R.id.text_view)
                 textView.text = message.text
+                textView.setTextColor(Color.WHITE)
+                if (message.senderId === toUid){
+                    val message_root = findViewById<RelativeLayout>(R.id.message_root)
+                    message_root.setBackgroundResource(R.drawable.message_to)
+
+                }
             }
             if (message.seen == 1 && message.senderId == fromUid) {
                 val tickread = view.findViewById<ImageView>(R.id.tickread)
@@ -289,6 +311,20 @@ class ChatActivity : AppCompatActivity() {
 
             }
         }
+    }
+
+    @KtorExperimentalAPI
+    private fun joinVideoCall(senderName: String) {
+
+        if (senderName.isEmpty()) {
+            Toast.makeText(this, "Failed to ACCEPT CAll", Toast.LENGTH_SHORT).show()
+        } else {
+            val intent = Intent(this, RTCActivity::class.java)
+            intent.putExtra("meetingID", senderName)
+            intent.putExtra("isJoin", true)
+            startActivity(intent)
+        }
+
     }
 
     inner class MessageAdapter internal constructor(options: FirestoreRecyclerOptions<TextMessage>) :
@@ -346,32 +382,16 @@ class ChatActivity : AppCompatActivity() {
                 ?.collection("messages")
 
 
-            if (messageCoolect != null) {
-                messageCoolect
-                    .whereEqualTo("recipientId", fromUid).get().addOnCompleteListener { t ->
-                        if (t.isSuccessful) {
+            messageCoolect?.whereEqualTo("recipientId", fromUid)?.get()
+                ?.addOnCompleteListener { t ->
+                    if (t.isSuccessful) {
 
-                            for (d in t.result!!) {
-                                messageCoolect.document(d.id).update("seen", 1)
+                        for (d in t.result!!) {
+                            messageCoolect.document(d.id).update("seen", 1)
 
-                            }
                         }
                     }
-
-
-            }
-        }
-    }
-
-
-    override fun onOptionsItemSelected(menuItem: MenuItem): Boolean {
-        return when (menuItem.itemId) {
-            android.R.id.home -> {
-                finish()
-                true
-            }
-
-            else -> super.onOptionsItemSelected(menuItem)
+                }
         }
     }
 
@@ -388,9 +408,80 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-
         if (adapter != null) {
             adapter!!.stopListening()
         }
     }
+
+    //creatiing Menu itemsas
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu_chat, menu)
+        return true
+    }
+
+    @ExperimentalCoroutinesApi
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+
+            R.id.action_share -> {
+                startVideoCall()
+
+                return true
+            }
+            R.id.action_exit -> {
+                return true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    @ExperimentalCoroutinesApi
+    @KtorExperimentalAPI
+    private fun startVideoCall() {
+        val db = Firebase.firestore
+        Constants.isIntiatedNow = true
+        Constants.isCallEnded = true
+
+        val meeting_id = (Calendar.getInstance().time).toString()
+        if (meeting_id.isEmpty())
+            Toast.makeText(this, "ERROR UNABLE TO CREATE CALL", Toast.LENGTH_SHORT).show()
+        else {
+            db.collection("calls")
+                .document(meeting_id)
+                .get()
+                .addOnSuccessListener {
+                    if (it["type"] == "OFFER" || it["type"] == "ANSWER" || it["type"] == "END_CALL") {
+                        Toast.makeText(this, "PLEASE TRY LATER", Toast.LENGTH_SHORT).show()
+                    } else {
+                        sendVideoCannelId(it.id)
+                        val intent = Intent(this, RTCActivity::class.java)
+                        intent.putExtra("meetingID", it.id)
+                        intent.putExtra("isJoin", false)
+                        startActivity(intent)
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "FAILED TO CREATE MEETING", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    private fun sendVideoCannelId(id: String) {
+        val messageToSend =
+            FirebaseAuth.getInstance().currentUser?.displayName?.let {
+                TextMessage(
+                    "",
+                    "ACCEPT",
+                    Calendar.getInstance().time,
+                    fromUid!!,
+                    toUid,
+                    id,
+                    "video",
+                    0
+                )
+            }
+        FirestoreClass().sendMessage(messageToSend, currentChannelId)
+    }
+
 }
