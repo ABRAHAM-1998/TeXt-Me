@@ -125,12 +125,12 @@ class ChatActivity : AppCompatActivity() {
 
             //================================
             button.setOnClickListener {
-
+            var messageText = edit_text.text.toString()
                 val messageToSend =
                     FirebaseAuth.getInstance().currentUser?.displayName?.let {
                         TextMessage(
                             "",
-                            edit_text.text.toString(),
+                            messageText,
                             Calendar.getInstance().time,
                             fromUid!!,
                             toUid,
@@ -140,7 +140,7 @@ class ChatActivity : AppCompatActivity() {
                         )
                     }
                 edit_text.text.clear()
-                if (messageToSend != null) {
+                if (messageText.isNotEmpty()) {
                     FirestoreClass().sendMessage(messageToSend, channelId)
                 }
             }
